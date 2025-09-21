@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор зони Френеля</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .calculator {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .unit-label {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .results h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-label {
+            color: #4a5568;
+            font-weight: 600;
+        }
+        
+        .result-value {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .formula-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .visualization {
+            margin-top: 25px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .visualization h4 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        #fresnelCanvas {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #e6f3ff 0%, #f0f8ff 100%);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .toggle-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .toggle-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 600px) {
+            .calculator {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            #fresnelCanvas {
+                height: 250px;
+            }
+            
+            .legend {
+                gap: 15px;
+            }
+            
+            .controls {
+                gap: 8px;
+            }
+            
+            .toggle-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="header">
+            <h1>Калькулятор зони Френеля</h1>
+            <p>Розрахунок радіуса першої зони Френеля для радіозв'язку</p>
+        </div>
+        
+        <div class="input-group">
+            <label for="frequency">Частота</label>
+            <input type="number" id="frequency" step="0.001" min="0.001" placeholder="Введіть частоту">
+            <select id="frequencyUnit">
+                <option value="MHz">МГц</option>
+                <option value="GHz">ГГц</option>
+                <option value="Hz">Гц</option>
+                <option value="kHz">кГц</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="distance">Загальна відстань</label>
+            <input type="number" id="distance" step="0.1" min="0.1" placeholder="Введіть відстань">
+            <select id="distanceUnit">
+                <option value="km">км</option>
+                <option value="m">м</option>
+                <option value="mi">милі</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="position">Позиція точки розрахунку</label>
+            <select id="position">
+                <option value="center">Центр траси (50%)</option>
+                <option value="custom">Користувацька позиція</option>
+            </select>
+        </div>
+        
+        <div class="input-group hidden" id="customPositionGroup">
+            <label for="customPosition">Відстань до точки розрахунку</label>
+            <input type="number" id="customPosition" step="0.1" min="0.1" placeholder="Відстань від першої антени">
+            <div class="unit-label" id="customPositionUnit">км</div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateFresnel()">
+            🔄 Розрахувати зону Френеля
+        </button>
+        
+        <div class="results hidden" id="results">
+            <h3>📊 Результати розрахунку</h3>
+            <div class="result-item">
+                <span class="result-label">100% зони Френеля:</span>
+                <span class="result-value" id="result100"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">80% зони Френеля:</span>
+                <span class="result-value" id="result80"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">60% зони Френеля:</span>
+                <span class="result-value" id="result60"></span>
+            </div>
+            
+            <div class="formula-info">
+                <strong>📐 Формула:</strong> R = √(λ × d₁ × d₂ / D)<br>
+                де λ - довжина хвилі, d₁ і d₂ - відстані до точки, D - загальна відстань<br>
+                <strong>💡 Рекомендація:</strong> Для надійного зв'язку слід забезпечити не менше 60% вільного простору від першої зони Френеля
+            </div>
+        </div>
+        
+        <div class="visualization hidden" id="visualization">
+            <h4>📊 Візуалізація зони Френеля</h4>
+            <canvas id="fresnelCanvas" width="400" height="300"></canvas>
+            
+            <div class="controls">
+                <button class="toggle-btn active" id="show100" onclick="toggleZone('100')">100%</button>
+                <button class="toggle-btn active" id="show80" onclick="toggleZone('80')">80%</button>
+                <button class="toggle-btn active" id="show60" onclick="toggleZone('60')">60%</button>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 99, 132, 0.3); border: 2px solid #ff6384;"></div>
+                    <span>100% зона</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 206, 86, 0.3); border: 2px solid #ffce56;"></div>
+                    <span>80% зона</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(75, 192, 192, 0.3); border: 2px solid #4bc0c0;"></div>
+                    <span>60% зона</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #667eea;"></div>
+                    <span>Антени</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальні змінні для візуалізації
+        let canvas, ctx;
+        let showZones = { '100': true, '80': true, '60': true };
+        let currentResults = null;
+        
+        // Ініціалізація canvas
+        function initCanvas() {
+            canvas = document.getElementById('fresnelCanvas');
+            if (!canvas) return;
+            
+            ctx = canvas.getContext('2d');
+            
+            // Встановлення фіксованого розміру
+            canvas.width = 450;
+            canvas.height = 300;
+            canvas.style.width = '100%';
+            canvas.style.height = 'auto';
+        }
+        
+        // Ініціалізація при завантаженні
+        document.addEventListener('DOMContentLoaded', initCanvas);
+        
+        // Обробка зміни позиції
+        document.getElementById('position').addEventListener('change', function() {
+            const customGroup = document.getElementById('customPositionGroup');
+            if (this.value === 'custom') {
+                customGroup.classList.remove('hidden');
+            } else {
+                customGroup.classList.add('hidden');
+            }
+        });
+        
+        // Синхронізація одиниць відстані
+        document.getElementById('distanceUnit').addEventListener('change', function() {
+            document.getElementById('customPositionUnit').textContent = this.value;
+        });
+        
+        function toggleZone(zone) {
+            showZones[zone] = !showZones[zone];
+            const btn = document.getElementById('show' + zone);
+            btn.classList.toggle('active');
+            if (currentResults) drawVisualization();
+        }
+        
+        function drawVisualization() {
+            if (!canvas || !ctx || !currentResults) return;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Очищення canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Налаштування координат
+            const margin = 40;
+            const drawWidth = width - 2 * margin;
+            const drawHeight = height - 2 * margin;
+            
+            // Позиції антен
+            const antenna1X = margin;
+            const antenna2X = width - margin;
+            const centerY = height / 2;
+            
+            // Позиція точки розрахунку
+            const pointX = antenna1X + (currentResults.d1 / currentResults.totalDistance) * drawWidth;
+            
+            // Масштаб для радіусів (обмежуємо максимальну висоту)
+            const maxRadius = currentResults.radius100;
+            const maxDisplayRadius = Math.min(drawHeight / 3, 80); // обмеження висоти
+            const radiusScale = maxDisplayRadius / maxRadius;
+            
+            // Малювання зон Френеля (від найбільшої до найменшої)
+            if (showZones['100']) {
+                drawFresnelEllipse(antenna1X, antenna2X, centerY, currentResults.radius100 * radiusScale, 'rgba(255, 99, 132, 0.2)', '#ff6384');
+            }
+            if (showZones['80']) {
+                drawFresnelEllipse(antenna1X, antenna2X, centerY, currentResults.radius80 * radiusScale, 'rgba(255, 206, 86, 0.3)', '#ffce56');
+            }
+            if (showZones['60']) {
+                drawFresnelEllipse(antenna1X, antenna2X, centerY, currentResults.radius60 * radiusScale, 'rgba(75, 192, 192, 0.4)', '#4bc0c0');
+            }
+            
+            // Малювання лінії зв'язку
+            ctx.strokeStyle = '#4a5568';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(antenna1X, centerY);
+            ctx.lineTo(antenna2X, centerY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Малювання антен
+            drawAntenna(antenna1X, centerY, 'A1');
+            drawAntenna(antenna2X, centerY, 'A2');
+            
+            // Малювання точки розрахунку
+            ctx.fillStyle = '#e53e3e';
+            ctx.beginPath();
+            ctx.arc(pointX, centerY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Підписи
+            ctx.fillStyle = '#2d3748';
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Точка', pointX, centerY - 12);
+            
+            // Відображення відстаней
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#4a5568';
+            const d1km = (currentResults.d1 / 1000).toFixed(1);
+            const d2km = (currentResults.d2 / 1000).toFixed(1);
+            ctx.fillText(`${d1km} км`, antenna1X + (pointX - antenna1X) / 2, centerY + 25);
+            ctx.fillText(`${d2km} км`, pointX + (antenna2X - pointX) / 2, centerY + 25);
+        }
+        
+        function drawFresnelEllipse(x1, x2, centerY, radius, fillColor, strokeColor) {
+            const centerX = (x1 + x2) / 2;
+            const a = (x2 - x1) / 2; // півось по горизонталі
+            const b = radius; // півось по вертикалі
+            
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, a, b, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+        
+        function drawAntenna(x, y, label) {
+            // Мачта антени
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(x, y - 20);
+            ctx.lineTo(x, y + 20);
+            ctx.stroke();
+            
+            // Основа антени
+            ctx.fillStyle = '#667eea';
+            ctx.fillRect(x - 8, y + 15, 16, 8);
+            
+            // Антена (трикутник)
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.moveTo(x, y - 20);
+            ctx.lineTo(x - 6, y - 10);
+            ctx.lineTo(x + 6, y - 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Підпис
+            ctx.fillStyle = '#4a5568';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y + 35);
+        }
+        
+        function calculateFresnel() {
+            // Отримання значень
+            const frequency = parseFloat(document.getElementById('frequency').value);
+            const frequencyUnit = document.getElementById('frequencyUnit').value;
+            const distance = parseFloat(document.getElementById('distance').value);
+            const distanceUnit = document.getElementById('distanceUnit').value;
+            const position = document.getElementById('position').value;
+            const customPosition = parseFloat(document.getElementById('customPosition').value);
+            
+            // Перевірка введених даних
+            if (!frequency || frequency <= 0) {
+                alert('Будь ласка, введіть коректну частоту');
+                return;
+            }
+            
+            if (!distance || distance <= 0) {
+                alert('Будь ласка, введіть коректну відстань');
+                return;
+            }
+            
+            if (position === 'custom' && (!customPosition || customPosition <= 0 || customPosition >= distance)) {
+                alert('Будь ласка, введіть коректну позицію точки розрахунку (менше загальної відстані)');
+                return;
+            }
+            
+            // Конвертація частоти в Гц
+            let frequencyHz = frequency;
+            switch (frequencyUnit) {
+                case 'kHz': frequencyHz *= 1000; break;
+                case 'MHz': frequencyHz *= 1000000; break;
+                case 'GHz': frequencyHz *= 1000000000; break;
+            }
+            
+            // Конвертація відстані в метри
+            let distanceM = distance;
+            let positionM = position === 'center' ? distance / 2 : customPosition;
+            switch (distanceUnit) {
+                case 'km': 
+                    distanceM *= 1000; 
+                    positionM *= 1000;
+                    break;
+                case 'mi': 
+                    distanceM *= 1609.34; 
+                    positionM *= 1609.34;
+                    break;
+            }
+            
+            // Розрахунок довжини хвилі
+            const lightSpeed = 299792458; // м/с
+            const wavelength = lightSpeed / frequencyHz;
+            
+            // Розрахунок відстаней
+            const d1 = positionM;
+            const d2 = distanceM - positionM;
+            
+            // Розрахунок радіуса першої зони Френеля
+            const fresnelRadius = Math.sqrt((wavelength * d1 * d2) / distanceM);
+            
+            // Розрахунок 60%, 80% та 100%
+            const radius100 = fresnelRadius;
+            const radius80 = fresnelRadius * 0.8;
+            const radius60 = fresnelRadius * 0.6;
+            
+            // Збереження результатів для візуалізації
+            currentResults = {
+                radius100: radius100,
+                radius80: radius80,
+                radius60: radius60,
+                d1: d1,
+                d2: d2,
+                totalDistance: distanceM
+            };
+            
+            // Відображення результатів
+            document.getElementById('result100').textContent = `${radius100.toFixed(3)} м`;
+            document.getElementById('result80').textContent = `${radius80.toFixed(3)} м`;
+            document.getElementById('result60').textContent = `${radius60.toFixed(3)} м`;
+            
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('visualization').classList.remove('hidden');
+            
+            // Малювання візуалізації
+            setTimeout(() => {
+                drawVisualization();
+            }, 100);
+            
+            // Плавна прокрутка до результатів
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Розрахунок при натисканні Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateFresnel();
+            }
+        });
+    </script>
+</body>
+</html>
